@@ -1,0 +1,96 @@
+			PETROL ANALYSIS
+
+
+Creation of Table in Hive and Loading of data
+
+A]
+CREATE DATABASE:
+create database petrol;
+
+B] 
+create table petrol (distributer_id STRING,distributer_name STRING,amt_IN STRING,amy_OUT STRING,vol_IN INT,vol_OUT INT,year INT) row format delimited fields terminated by ‘,’ stored as textfile;
+
+C]
+load data local inpath ‘/home/hduser/Desktop/hive/data/petrol_data.txt’ into table petrol;
+
+d]create table petrol1 (distributer_id STRING,distributer_name STRING,amt_IN INT,amt_OUT INT,vol_IN INT,vol_OUT INT,year INT) row format delimited fields terminated by ',' stored as textfile;
+
+
+E] insert overwrite table petrol1 select distributer_id,distributer_name,regexp_replace(amt_IN,"\\$",""),regexp_replace(amy_OUT,"\\$",""),vol_IN,vol_OUT,year from petrol;
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+							ANALYSIS
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+1)In real life what is the total amount of petrol in volume sold by every distributor?
+Ans::---
+
+select distributer_id,distributer_name,sum(vol_out) as total from petrol group by distributer_id,distributer_name;
+
+A0I 5Q8	reliance	818
+A0M 0G6	Bharat	691
+A0P 2M4	Bharat	662
+A0V 7Q3	Bharat	880
+
+
+
+
+
+2)Which are the top 10 distributors ID’s for selling petrol and also display the amount of petrol sold in volume by them individually?
+Ans:----
+select distributer_id,distributer_name,sum(vol_out) as total from petrol group by distributer_id,distributer_name order by total desc limit 10;
+
+T1A 9W4	reliance	899
+S8W 0P4	reliance	899
+V8U 2T6	shell	898
+O9P 9S3	reliance	897
+O8A 6Z5	Bharat	897
+F6W 6H3	shell	896
+M6S 1P4	Bharat	895
+N5Q 8E5	Bharat	895
+J4M 4G3	shell	895
+E6O 9P1	Bharat	895
+
+
+
+
+3)Find real life 10 distributor name who sold petrol in the least amount.
+Ans:----
+ select distributer_id,distributer_name,sum(vol_out) as total from petrol group by distributer_id,distributer_name order by total limit 10;
+
+F4D 6K2	Bharat	602
+H7M 4M4	Bharat	603
+G9F 6U7	hindustan	607
+R3W 2E3	shell	608
+O5D 2R6	hindustan	610
+H4P 6A9	Bharat	610
+V0Z 0F6	reliance	612
+O0D 0L1	shell	612
+W0M 8R7	shell	612
+L9H 1K6	hindustan	613
+
+
+
+4) The constraint to this query is the difference between volumeIN and volumeOuT is illegal in real life if greater than 500. As we see all distributors are receiving patrols on every next cycle.
+
+List all distributors who have this difference, along with the year and the difference which they have in that year.
+Hint: (vol_IN-vol_OUT)>500
+
+Ans:-
+select distributer_id,distributer_name,year,(vol_in-vol_out) from petrol where (vol_in-vol_out)>500 group by distributer_id,(vol_in-vol_out),distributer_name,year order by year desc ;
+Stage-Stage-2: Map: 1  Reduce: 1   Cumulative CPU: 2.01 sec   HDFS Read: 5009 HDFS Write: 0 SUCCESS
+Total MapReduce CPU Time Spent: 5 seconds 400 msec
+OK
+
+no such distributer whose difference of volume_in-vol_out is greater than 500.
+
+
+select distributer_id,distributer_name,year,(vol_in-vol_out) as diff from petrol group by distributer_id,(vol_in-vol_out),distributer_name,year order by diff desc ;
+
+E6U 0I2	hindustan	1646	483
+R3W 2E3	shell	1767	480
+
+
+
+

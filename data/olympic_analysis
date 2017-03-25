@@ -1,0 +1,218 @@
+A] create database olympic
+
+b] create table olympic
+
+1.create database olympic'
+
+2.create table olympic (athelete STRING,age INT,country STRING,year STRING,closing STRING,sport STRING,gold INT,silver INT,bronze INT,total INT) row format delimited fields terminated by '\t' stored as textfile;
+
+3.LOAD DATA LOCAL INPATH '/home/hduser/Desktop/hive/data/olympic_data' OVERWRITE INTO TABLE olympic;
+
+4.select * from olympic limit 10;
+
+
+ANALYSIS:-----
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+1. Using the dataset list the total number of medals won by each country in swimming.?
+Ans:---select country,sport,sum(total) as medals from olympic where sport='Swimming' group by country,sport order by medals desc;
+United States	Swimming	267
+Australia	Swimming	163
+Netherlands	Swimming	46
+Japan	Swimming	43
+France	Swimming	39
+China	Swimming	35
+Germany	Swimming	32
+Russia	Swimming	20
+Italy	Swimming	16
+South Africa	Swimming	11
+Great Britain	Swimming	11
+Hungary	Swimming	9
+Sweden	Swimming	9
+Brazil	Swimming	8
+Ukraine	Swimming	7
+Zimbabwe	Swimming	7
+Romania	Swimming	6
+Canada	Swimming	5
+South Korea	Swimming	4
+Poland	Swimming	3
+Tunisia	Swimming	3
+Spain	Swimming	3
+Austria	Swimming	3
+Norway	Swimming	2
+Slovakia	Swimming	2
+Belarus	Swimming	2
+Costa Rica	Swimming	2
+Lithuania	Swimming	1
+Trinidad and Tobago	Swimming	1
+Slovenia	Swimming	1
+Serbia	Swimming	1
+Denmark	Swimming	1
+Croatia	Swimming	1
+Argentina	Swimming	1
+
+
+2.Display real life number of medals India won year wise.
+Ans:----
+select country,year,sum(total) from olympic where country='India' group by country,year;
+India	2000	1
+India	2004	1
+India	2008	3
+India	2012	6
+
+3)Find the total number of medals each country won display the name along with total medals?
+Ans:----
+ select country,sum(total) as medal from olympic group by country;
+Afghanistan	2
+Algeria	8
+Argentina	141
+Armenia	10
+
+4)Find the real life number of gold medals each country won.
+Ans:--
+select country,sum(gold) as gold_medal from olympic group by country;
+
+Afghanistan	0
+Algeria	2
+Argentina	49
+Armenia	0
+
+
+5)Which country got medals for Shooting, year wise classification?
+Ans:----
+
+create table out1 (country string,year string,sport string,total_medal int) row format delimited fields terminated by ',' stored as textfile;
+
+hive> desc out1;
+OK
+country             	string              	                    
+year                	string              	                    
+sport               	string              	                    
+total_medal         	int    
+
+hive> insert overwrite table out1 select country,year,sport ,total from olympic where sport='Shooting' group by country,year,sport,total;
+
+
+hive> select * from out1 limit 10;
+OK
+Australia	2000	Shooting	1
+Australia	2004	Shooting	1
+Australia	2008	Shooting	1
+
+FOR YEAR:2000:----
+hive> select year,country,total_medal from out1 where year='2000'group by year,country,total_medal;
+2000	Australia	1
+2000	Azerbaijan	1
+2000	Belarus	1
+2000	Belarus	2
+2000	Bulgaria	1
+2000	China	1
+2000	China	2
+2000	Czech Republic	1
+2000	Denmark	1
+2000	Finland	1
+2000	France	1
+2000	Great Britain	1
+2000	Hungary	1
+2000	Italy	1
+2000	Kuwait	1
+2000	Lithuania	1
+2000	Moldova	1
+2000	Norway	1
+2000	Poland	1
+2000	Romania	1
+2000	Russia	1
+2000	Serbia and Montenegro	1
+2000	Slovenia	1
+2000	South Korea	1
+2000	Sweden	1
+2000	Switzerland	1
+2000	Ukraine	1
+2000	United States	1
+
+FOR YEAR:2004:----
+hive> select year,country,total_medal from out1 where year='2004'group by year,country,total_medal;
+
+2004	Australia	1
+2004	Austria	1
+2004	Azerbaijan	1
+2004	Belarus	1
+2004	Bulgaria	2
+2004	China	1
+2004	Cuba	1
+2004	Czech Republic	1
+2004	Finland	1
+2004	Germany	1
+2004	Hungary	1
+2004	India	1
+2004	Italy	1
+2004	North Korea	1
+2004	Russia	1
+2004	Russia	2
+2004	Serbia and Montenegro	1
+2004	Slovakia	1
+2004	South Korea	1
+2004	South Korea	2
+2004	Spain	1
+2004	Ukraine	1
+2004	United Arab Emirates	1
+2004	United States	1
+
+
+
+
+
+FOR YEAR:2008:----
+hive> select year,country,total_medal from out1 where year='2008'group by year,country,total_medal;
+2008	Australia	1
+2008	China	1
+2008	Croatia	1
+2008	Cuba	1
+2008	Czech Republic	1
+2008	Czech Republic	2
+2008	Finland	1
+2008	France	1
+2008	Georgia	1
+2008	Germany	1
+2008	India	1
+2008	Italy	1
+2008	Mongolia	1
+2008	Norway	1
+2008	Russia	1
+2008	Slovakia	1
+2008	Slovenia	1
+2008	South Korea	2
+2008	Ukraine	1
+2008	United States	1
+
+
+
+FOR YEAR:2012:----
+hive> select year,country,total_medal from out1 where year='2012'group by year,country,total_medal;
+2012	Belarus	1
+2012	Belgium	1
+2012	China	1
+2012	Croatia	1
+2012	Cuba	1
+2012	Czech Republic	1
+2012	Denmark	1
+2012	France	1
+2012	Great Britain	1
+2012	India	1
+2012	Italy	1
+2012	Italy	2
+2012	Kuwait	1
+2012	Poland	1
+2012	Qatar	1
+2012	Romania	1
+2012	Russia	1
+2012	Serbia	1
+2012	Slovakia	1
+2012	Slovenia	1
+2012	South Korea	1
+2012	South Korea	2
+2012	Sweden	1
+2012	Ukraine	2
+2012	United States	1
+
+
+

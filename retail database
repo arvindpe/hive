@@ -1,0 +1,169 @@
+			HIVE ANALYSIS ON RETAIL DATABASE
+
+create database retail;
+
+
+1. Count of each profession in the Customers List [with out indexing]
+---------------------------------------------------
+select profession, count(profession) as headcount from customer group by profession order by headcount;
+
+NULL	0
+	83
+Writer	95
+Artist	175
+Environmental scientist	176
+Dancer	178
+
+
+ Inserting output in hdfs file system
+-------------------------------------------
+INSERT OVERWRITE DIRECTORY '/niit/custcount' row format delimited fields terminated by ',' 
+select profession, count(*) from customer group by profession
+
+with index:----
+ i) create index prof_index on table customer(profession) as compact with deferred rebuild;
+ ii)alter index prof_index on customer rebuild;
+ iii)show indexes on customer;
+iv) describe retail__customer_prof_index__;
+v)select * from retail__customer_prof_index__ where profession="Pilot";
+vi)select profession,SIZE(`_offsets`) from retail__customer_prof_index__ where profession='Actor';
+
+OK
+Actor	196
+Time taken: 0.075 seconds, Fetched: 1 row(s)
+
+without indexing time taken is:
+select profession,count(*) from customer where profession="Actor" group by profession;
+OK
+Actor	196
+Time taken: 28.562 seconds, Fetched: 1 row(s)
+
+
+
+
+2.find count of customer who have any profession ?
+Ans:-9999
+ 
+
+
+
+3..find top 10 customer with their personal details
+------------------------------------------------
+
+hive> select a.custno,b.firstname,b.lastname,b.profession,sum(a.amount) as totalsale from txnrecords a join customer b on a.custno=b.custno group by a.custno,b.firstname,b.lastname,b.profession order by totalsale desc limit 10;
+
+4009485	Stuart	House	Teacher	1973.3
+4006425	Joe	Burns	Economist	1732.09
+4000221	Glenda	Boswell	Civil engineer	1671.4700000000003
+4003228	Elsie	Newton	Accountant	1640.63
+4006606	Jackie	Lewis	Recreation and fitness worker	1628.9399999999996
+4006467	Evelyn	Monroe	Financial analyst	1605.9499999999998
+4004927	Joan	Lowry	Librarian	1576.71
+4008321	Paul	Carey	Human resources assistant	1560.79
+4000815	Julie	Galloway	Actor	1557.8200000000002
+4001051	Arlene	Higgins	Police officer	1488.67
+
+
+ Inserting output in local file
+-
+INSERT OVERWRITE LOCAL DIRECTORY '/home/hduser/niit/custcount' row format delimited fields terminated by ',' 
+select profession, count(*) as headcount from customer group by profession order by headcount desc limit 10;
+
+
+4.find the percentage of total sales in each type(credit,cash)
+--------------------------------------------------------------
+Ans:---hive> select a.spentby, round(sum(a.amount),2) as typesales, round((sum(a.amount)/total*100),2) as salespercent from txnrecords a, totalsale b group by a.spentby, b.total ;
+
+cash	187685.61	3.67
+credit	4923134.93	96.33
+
+
+B.Nyse table:
+--------------------------------------
+A] create table nyse1
+
+create table nyse1 (exchangeName string,stock_symbol string,stock_date date,stock_price_open double,stock_price_high double,stock_price_low double,stock_price_close double,stock_volume bigint,stock_price_adj_close double) row format delimited fields terminated by ',' stored as textfile;
+
+1.FIND THE MAX STOCK VARIENCE FOR EACH  STOCK?
+Ans:---select stock_symbol,max((stock_price_high-stock_price_low)*100/stock_price_low) as maxvarience from NYSE1 group by stock_symbol;
+
+ AA	40.82352941176471
+AAI	88.855421686747
+AAN	36.322532027128865
+
+
+2.find total stock volume for each stock?
+Ans:----
+INSERT OVERWRITE LOCAL DIRECTORY '/home/hduser/niit/stock_volume_of_each_stock' row format delimited fields terminated by ','select stock_symbol,sum(stock_volume) from NYSE1;
+
+
+
+---------------------------------------------------------------------------------------------------
+C...pick up output from MR program margine data of the Retail_data
+
+create table margine 
+external table :
+
+create external table margine(prodno string,profit bigint,margin_pc double,qty int) row format delimited fields terminated by ',' stored as textfile locatio '/niit/margine1';
+
+1.find total profit ?
+Ans:----select sum(profit) from margine;
+
+ the total profit 16163257?
+
+2.find profit % for those product whose margin grater than 10 ---(profit%=profit/gross profit*100)
+Ans:----
+
+create table grossprofit (ptotal bigint);
+insert overwrite table grossprofit select sum(profit) from margine where profit >0;
+
+select sum(a.profit) as total_profit,(sum(a.profit)*100/b.ptotal) as profit_pc from margine a,grossprofit b where a.margin_pc >10 group by b.ptotal;
+
+14899667	89.56923688430594
+
+
+3.find volume of business (qty) for those product whose margin greater than 10?
+Ans:----select prodno,qty from margine where margin_pc >10
+4714072601602	1
+4714072601619	11
+4714072601671	21
+4714072601688	21
+4714072601695	4
+4714072601732	2
+
+
+4. find gross profit?
+Ans:---
+select sum(profit) from margine where profit >0;
+
+16634804
+
+
+
+5.find gross loss?
+Ans:---
+select sum(profit*-1) from margine where profit <0;
+
+471547
+
+
+6.find(gross loss/gross profit*100) % should be as less as possible?
+Ans:----
+create table grossprofit (ptotal bigint);
+insert overwrite table grossprofit select sum(profit) from margine where profit >0;
+
+hive> create table grossloss (ltotal bigint);
+insert overwrite table grossloss select sum(profit) from margine where profit <0;
+
+select (b.ltotal*100/a.ptotal) as loss_pc from grossprofit a,grossloss b;
+
+-2.834701268497062
+
+
+
+
+
+
+
+
+
